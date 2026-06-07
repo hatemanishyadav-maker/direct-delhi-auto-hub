@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, Text, View, useColorScheme } from "react-native";
@@ -69,24 +68,18 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="house" tintColor={color} size={24} />
-            ) : (
-              <Feather name="home" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => (
+            <Feather name="home" size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="shop"
         options={{
           title: "Shop",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="bag" tintColor={color} size={24} />
-            ) : (
-              <Feather name="grid" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => (
+            <Feather name="grid" size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -95,11 +88,7 @@ export default function TabLayout() {
           title: "Cart",
           tabBarIcon: ({ color }) => (
             <View style={{ position: "relative" }}>
-              {isIOS ? (
-                <SymbolView name="cart" tintColor={color} size={24} />
-              ) : (
-                <Feather name="shopping-cart" size={22} color={color} />
-              )}
+              <Feather name="shopping-cart" size={22} color={color} />
               <CartBadge count={totalItems} />
             </View>
           ),
@@ -109,12 +98,9 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Account",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person" tintColor={color} size={24} />
-            ) : (
-              <Feather name="user" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => (
+            <Feather name="user" size={22} color={color} />
+          ),
         }}
       />
     </Tabs>
