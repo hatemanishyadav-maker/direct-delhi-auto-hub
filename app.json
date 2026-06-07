@@ -1,48 +1,44 @@
 {
-    "expo": {
-      "name": "Direct Delhi Auto Hub",
-      "slug": "direct-delhi-auto-hub",
-      "version": "1.0.0",
-      "orientation": "portrait",
-      "icon": "./assets/images/icon.png",
-      "scheme": "directdelhiautohub",
-      "userInterfaceStyle": "dark",
-      "newArchEnabled": false,
-      "splash": {
-        "image": "./assets/images/icon.png",
-        "resizeMode": "contain",
+  "expo": {
+    "name": "Direct Delhi Auto Hub",
+    "slug": "direct-delhi-auto-hub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "directdelhiautohub",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.directdelhiautohub.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0A0A0A"
       },
-      "ios": {
-        "supportsTablet": false,
-        "bundleIdentifier": "com.directdelhiautohub.app"
-      },
-      "android": {
-        "adaptiveIcon": {
-          "foregroundImage": "./assets/images/icon.png",
-          "backgroundColor": "#0A0A0A"
-        },
-        "package": "com.directdelhiautohub.app",
-        "versionCode": 1,
-        "permissions": []
-      },
-      "web": {
-        "favicon": "./assets/images/icon.png"
-      },
-      "plugins": [
-        "expo-router",
-        "expo-font",
-        "expo-web-browser"
-      ],
-      "experiments": {
-        "typedRoutes": true
-      },
-      "extra": {
-        "eas": {
-          "projectId": "60c0fcf6-075a-489f-a202-17fb921a21da"
-        }
-      },
-      "owner": "manish6622"
-    }
+      "package": "com.directdelhiautohub.app",
+      "versionCode": 1,
+      "permissions": []
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "60c0fcf6-075a-489f-a202-17fb921a21da"
+      }
+    },
+    "owner": "manish6622"
   }
-  
+}
