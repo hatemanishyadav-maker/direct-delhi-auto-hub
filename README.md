@@ -1,9 +1,5 @@
 # Direct Delhi Auto Hub
 
-Car Accessories E-commerce Mobile App built with Expo (React Native).
+Car accessories e-commerce app by Manish Yadav, Delhi.
 
-## Build APK
-```bash
-npm install
-npx eas-cli build --platform android --profile preview
-```
+Build triggered: 2026-06-07T13:57:34.671Z
