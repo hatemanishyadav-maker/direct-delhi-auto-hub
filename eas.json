@@ -4,9 +4,11 @@
   },
   "build": {
     "preview": {
-      "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "cache": {
+          "disabled": true
+        }
       }
     },
     "production": {
