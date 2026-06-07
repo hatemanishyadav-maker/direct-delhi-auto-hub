@@ -4,7 +4,8 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start"
+    "start": "expo start",
+    "postinstall": "printf 'EAS_NO_VCS=1\\n' >> \"$GITHUB_ENV\" 2>/dev/null || true"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "0.4.2",
