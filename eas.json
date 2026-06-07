@@ -4,6 +4,7 @@
   },
   "build": {
     "preview": {
+      "credentialsSource": "remote",
       "android": {
         "buildType": "apk",
         "cache": {
@@ -12,6 +13,7 @@
       }
     },
     "production": {
+      "credentialsSource": "remote",
       "android": {
         "buildType": "app-bundle"
       }
