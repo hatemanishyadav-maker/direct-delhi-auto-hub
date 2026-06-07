@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "postinstall": "printf 'EAS_NO_VCS=1\\n' >> \"$GITHUB_ENV\" 2>/dev/null || true"
+    "postinstall": "node -e \"const f=process.env.GITHUB_ENV;if(f)require('fs').appendFileSync(f,'EAS_NO_VCS=1\\n')\""
   },
   "dependencies": {
     "@expo-google-fonts/inter": "0.4.2",
