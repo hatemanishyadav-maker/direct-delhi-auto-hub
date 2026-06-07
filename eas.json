@@ -4,13 +4,9 @@
   },
   "build": {
     "preview": {
-      "node": "20.18.3",
       "distribution": "internal",
       "android": {
-        "gradleCommand": ":app:assembleDebug",
-        "cache": {
-          "disabled": true
-        }
+        "buildType": "apk"
       }
     },
     "production": {
