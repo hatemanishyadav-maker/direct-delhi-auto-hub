@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -23,27 +23,52 @@ import { useAllProducts } from "@/hooks/useProducts";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 16 * 2 - 12) / 2;
 
+const FILTER_LABELS: Record<string, string> = {
+  featured: "Featured",
+  new: "New Arrivals",
+  bestseller: "Best Sellers",
+};
+
 export default function ShopScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const [activeCategory, setActiveCategory] = useState("all");
+  const params = useLocalSearchParams<{ category?: string; filter?: string }>();
+  const [activeCategory, setActiveCategory] = useState(params.category ?? "all");
+  const [activeFilter, setActiveFilter] = useState(params.filter ?? "");
   const [searchQuery, setSearchQuery] = useState("");
   const s = styles(colors);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
-  const { products, loading } = useAllProducts(searchQuery);
+  useEffect(() => {
+    if (params.category) setActiveCategory(params.category);
+    if (params.filter !== undefined) setActiveFilter(params.filter ?? "");
+  }, [params.category, params.filter]);
+
+  const { products, loading } = useAllProducts(searchQuery, activeFilter);
 
   const filtered = useMemo(() => {
     if (activeCategory === "all") return products;
     return products.filter((p) => p.categoryId === activeCategory);
   }, [products, activeCategory]);
 
-  const allCategories = [{ id: "all", name: "All", icon: "grid", color: colors.red }, ...categories];
+  const allCategories = [
+    { id: "all", name: "All", icon: "grid", color: colors.red },
+    ...categories,
+  ];
+
+  const pageTitle = activeFilter ? FILTER_LABELS[activeFilter] ?? "Shop" : "Shop";
 
   return (
     <View style={[s.container, { paddingTop: topPad }]}>
       <View style={s.header}>
-        <Text style={s.title}>Shop</Text>
+        {activeFilter ? (
+          <Pressable style={s.backBtn} onPress={() => { setActiveFilter(""); router.back(); }}>
+            <Feather name="arrow-left" size={22} color={colors.foreground} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 38 }} />
+        )}
+        <Text style={s.title}>{pageTitle}</Text>
         <Pressable onPress={() => router.push("/search" as any)}>
           <Feather name="search" size={22} color={colors.foreground} />
         </Pressable>
@@ -65,22 +90,36 @@ export default function ShopScreen() {
         )}
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabs}>
-        {allCategories.map((cat) => (
-          <Pressable
-            key={cat.id}
-            style={[s.tab, {
-              backgroundColor: activeCategory === cat.id ? colors.red : colors.card,
-              borderColor: activeCategory === cat.id ? colors.red : colors.border,
-            }]}
-            onPress={() => setActiveCategory(cat.id)}
-          >
-            <Text style={[s.tabText, { color: activeCategory === cat.id ? "#fff" : colors.mutedForeground }]}>
-              {cat.name}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      {!activeFilter && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.tabs}
+        >
+          {allCategories.map((cat) => (
+            <Pressable
+              key={cat.id}
+              style={[
+                s.tab,
+                {
+                  backgroundColor: activeCategory === cat.id ? colors.red : colors.card,
+                  borderColor: activeCategory === cat.id ? colors.red : colors.border,
+                },
+              ]}
+              onPress={() => setActiveCategory(cat.id)}
+            >
+              <Text
+                style={[
+                  s.tabText,
+                  { color: activeCategory === cat.id ? "#fff" : colors.mutedForeground },
+                ]}
+              >
+                {cat.name}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
 
       {loading ? (
         <View style={s.loader}>
@@ -122,7 +161,8 @@ const styles = (colors: ReturnType<typeof useColors>) =>
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
-    title: { color: colors.foreground, fontSize: 22, fontWeight: "800" },
+    backBtn: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
+    title: { color: colors.foreground, fontSize: 20, fontWeight: "800" },
     searchBox: {
       flexDirection: "row",
       alignItems: "center",
@@ -141,7 +181,7 @@ const styles = (colors: ReturnType<typeof useColors>) =>
     tab: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
     tabText: { fontSize: 13, fontWeight: "600" },
     loader: { flex: 1, alignItems: "center", justifyContent: "center" },
-    count: { color: colors.mutedForeground, fontSize: 13, paddingHorizontal: 16, marginBottom: 8 },
+    count: { color: colors.mutedForeground, fontSize: 13, paddingHorizontal: 16, marginBottom: 8, marginTop: 8 },
     list: { paddingHorizontal: 16, paddingBottom: Platform.OS === "web" ? 100 : 90 },
     row: { gap: 12, marginBottom: 12 },
     empty: { alignItems: "center", justifyContent: "center", paddingVertical: 80, gap: 12 },
