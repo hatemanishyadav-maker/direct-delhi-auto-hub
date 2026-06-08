@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "postinstall": "node -e \"const f=process.env.GITHUB_ENV;if(f){require('fs').appendFileSync(f,'EAS_NO_VCS=1\\n');const {spawnSync}=require('child_process');console.log('=== BUNDLE TEST ===');const r=spawnSync('node',['node_modules/.bin/expo','export','--platform','android'],{stdio:'inherit',timeout:120000,env:{...process.env,EXPO_NO_TELEMETRY:'1'}});console.log('=== BUNDLE EXIT:',r.status,'===')};\""
+    "postinstall": "node -e \"const f=process.env.GITHUB_ENV;if(f)require('fs').appendFileSync(f,'EAS_NO_VCS=1\\n')\""
   },
   "dependencies": {
     "@expo-google-fonts/inter": "0.4.2",
@@ -31,10 +31,12 @@
     "react-native-screens": "4.16.0",
     "react-native-web": "0.21.2",
     "typescript": "5.9.3",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "react-native-reanimated": "3.19.5"
   },
   "devDependencies": {
     "@babel/core": "7.29.0",
-    "@types/react": "19.1.17"
+    "@types/react": "19.1.17",
+    "babel-preset-expo": "54.0.11"
   }
 }
