@@ -41,14 +41,23 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [ready, setReady] = React.useState(false);
 
   useEffect(() => {
+    // Always hide splash + render within 3 seconds, even if fonts hang
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+      setReady(true);
+    }, 3000);
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      clearTimeout(timer);
+      SplashScreen.hideAsync().catch(() => {});
+      setReady(true);
     }
+    return () => clearTimeout(timer);
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!ready) return null;
 
   return (
     <SafeAreaProvider>
