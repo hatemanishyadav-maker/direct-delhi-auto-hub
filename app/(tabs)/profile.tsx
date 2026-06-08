@@ -1,10 +1,11 @@
 import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { Linking } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -22,17 +23,88 @@ import { useColors } from "@/hooks/useColors";
 const WHATSAPP_NUMBER = "919753662278";
 const PHONE_NUMBER = "9753662278";
 const ADMIN_PIN = "1234";
+const USER_KEY = "@ddah_user";
+
+interface UserInfo {
+  name: string;
+  phone: string;
+  city: string;
+}
 
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { items: wishlist } = useWishlist();
+  const [user, setUser] = useState<UserInfo | null>(null);
+
+  // Admin PIN modal
   const [pinModal, setPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
+
+  // Login modal
+  const [loginModal, setLoginModal] = useState(false);
+  const [loginName, setLoginName] = useState("");
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginCity, setLoginCity] = useState("");
+  const [loginError, setLoginError] = useState("");
+
   const s = styles(colors);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
+
+  useEffect(() => {
+    AsyncStorage.getItem(USER_KEY).then((val) => {
+      if (val) setUser(JSON.parse(val));
+    });
+  }, []);
+
+  const handleLogin = async () => {
+    if (!loginName.trim()) {
+      setLoginError("Please enter your name.");
+      return;
+    }
+    if (!loginPhone.trim() || loginPhone.trim().length < 10) {
+      setLoginError("Please enter a valid 10-digit phone number.");
+      return;
+    }
+    const info: UserInfo = {
+      name: loginName.trim(),
+      phone: loginPhone.trim(),
+      city: loginCity.trim() || "Delhi",
+    };
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(info));
+    setUser(info);
+    setLoginModal(false);
+    setLoginName("");
+    setLoginPhone("");
+    setLoginCity("");
+    setLoginError("");
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const handleLogout = () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem(USER_KEY);
+          setUser(null);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        },
+      },
+    ]);
+  };
+
+  const openLoginModal = () => {
+    setLoginName(user?.name || "");
+    setLoginPhone(user?.phone || "");
+    setLoginCity(user?.city || "");
+    setLoginError("");
+    setLoginModal(true);
+  };
 
   const openWhatsApp = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -56,17 +128,10 @@ export default function ProfileScreen() {
     }
   };
 
-  const openAdminModal = () => {
-    setPinInput("");
-    setPinError("");
-    setPinModal(true);
-  };
-
   const menuItems = [
     { icon: "heart", label: "Wishlist", subtitle: `${wishlist.length} items saved`, onPress: () => {} },
     { icon: "package", label: "My Orders", subtitle: "Track your orders", onPress: () => {} },
-    { icon: "map-pin", label: "Saved Addresses", subtitle: "Manage delivery addresses", onPress: () => {} },
-    { icon: "star", label: "Loyalty Points", subtitle: "0 points earned", onPress: () => {} },
+    { icon: "map-pin", label: "Saved Addresses", subtitle: user?.city ? `${user.city}` : "Manage delivery addresses", onPress: () => {} },
   ];
 
   const supportItems = [
@@ -76,7 +141,7 @@ export default function ProfileScreen() {
     { icon: "map", label: "Store Location", subtitle: "Delhi, India", onPress: () => Linking.openURL("https://maps.google.com/?q=Delhi+India") },
   ];
 
-  const renderItem = (item: typeof menuItems[0], accent?: boolean) => (
+  const renderItem = (item: { icon: string; label: string; subtitle: string; onPress: () => void }, accent?: boolean) => (
     <Pressable key={item.label} style={s.menuItem} onPress={item.onPress}>
       <View style={[s.iconBox, { backgroundColor: accent ? colors.red + "22" : colors.secondary }]}>
         <Feather name={item.icon as any} size={20} color={accent ? colors.red : colors.foreground} />
@@ -96,15 +161,27 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={s.profileCard}>
+        {/* Profile Card */}
+        <Pressable style={s.profileCard} onPress={openLoginModal}>
           <View style={s.avatar}>
             <Feather name="user" size={32} color={colors.red} />
           </View>
-          <View>
-            <Text style={s.userName}>Guest User</Text>
-            <Text style={s.userSub}>Delhi, India</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={s.userName}>{user ? user.name : "Guest User"}</Text>
+            <Text style={s.userSub}>
+              {user ? `+91 ${user.phone} · ${user.city}` : "Tap to sign in"}
+            </Text>
           </View>
-        </View>
+          {user ? (
+            <Pressable onPress={handleLogout} style={s.logoutBtn}>
+              <Feather name="log-out" size={16} color={colors.mutedForeground} />
+            </Pressable>
+          ) : (
+            <View style={s.signInBadge}>
+              <Text style={s.signInText}>Sign In</Text>
+            </View>
+          )}
+        </Pressable>
 
         <Text style={s.sectionLabel}>My Activity</Text>
         <View style={s.card}>
@@ -116,7 +193,7 @@ export default function ProfileScreen() {
           {supportItems.map((item) => renderItem(item, (item as any).accent))}
         </View>
 
-        <Pressable style={s.adminCard} onPress={openAdminModal}>
+        <Pressable style={s.adminCard} onPress={() => { setPinInput(""); setPinError(""); setPinModal(true); }}>
           <View style={[s.iconBox, { backgroundColor: colors.red + "22" }]}>
             <Feather name="shield" size={20} color={colors.red} />
           </View>
@@ -141,6 +218,70 @@ export default function ProfileScreen() {
         <View style={{ height: Platform.OS === "web" ? 100 : 90 + bottomPad }} />
       </ScrollView>
 
+      {/* Login / Edit Profile Modal */}
+      <Modal visible={loginModal} transparent animationType="slide">
+        <View style={s.modalOverlay}>
+          <View style={s.modal}>
+            <View style={s.modalHeader}>
+              <View style={s.modalIconBox}>
+                <Feather name="user" size={24} color={colors.red} />
+              </View>
+              <Text style={s.modalTitle}>{user ? "Edit Profile" : "Sign In"}</Text>
+              <Text style={s.modalSub}>Enter your details to continue</Text>
+            </View>
+
+            <View style={s.inputGroup}>
+              <Text style={s.inputLabel}>Full Name *</Text>
+              <TextInput
+                style={s.input}
+                placeholder="e.g. Manish Yadav"
+                placeholderTextColor={colors.mutedForeground}
+                value={loginName}
+                onChangeText={(t) => { setLoginName(t); setLoginError(""); }}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={s.inputGroup}>
+              <Text style={s.inputLabel}>Phone Number *</Text>
+              <TextInput
+                style={s.input}
+                placeholder="10-digit mobile number"
+                placeholderTextColor={colors.mutedForeground}
+                value={loginPhone}
+                onChangeText={(t) => { setLoginPhone(t.replace(/\D/g, "")); setLoginError(""); }}
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
+            </View>
+
+            <View style={s.inputGroup}>
+              <Text style={s.inputLabel}>City</Text>
+              <TextInput
+                style={s.input}
+                placeholder="e.g. Delhi"
+                placeholderTextColor={colors.mutedForeground}
+                value={loginCity}
+                onChangeText={setLoginCity}
+                autoCapitalize="words"
+              />
+            </View>
+
+            {loginError ? <Text style={s.pinError}>{loginError}</Text> : null}
+
+            <View style={s.modalBtns}>
+              <Pressable style={s.cancelBtn} onPress={() => setLoginModal(false)}>
+                <Text style={s.cancelBtnText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={s.confirmBtn} onPress={handleLogin}>
+                <Text style={s.confirmBtnText}>{user ? "Save" : "Sign In"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Admin PIN Modal */}
       <Modal visible={pinModal} transparent animationType="slide">
         <View style={s.modalOverlay}>
           <View style={s.modal}>
@@ -210,6 +351,16 @@ const styles = (colors: ReturnType<typeof useColors>) =>
     },
     userName: { color: colors.foreground, fontSize: 18, fontWeight: "700" },
     userSub: { color: colors.mutedForeground, fontSize: 13, marginTop: 2 },
+    signInBadge: {
+      backgroundColor: colors.red,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    signInText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+    logoutBtn: {
+      padding: 8,
+    },
     sectionLabel: {
       color: colors.mutedForeground,
       fontSize: 12,
@@ -295,6 +446,18 @@ const styles = (colors: ReturnType<typeof useColors>) =>
     },
     modalTitle: { color: colors.foreground, fontSize: 20, fontWeight: "800" },
     modalSub: { color: colors.mutedForeground, fontSize: 14, textAlign: "center" },
+    inputGroup: { gap: 6 },
+    inputLabel: { color: colors.mutedForeground, fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 },
+    input: {
+      backgroundColor: colors.secondary,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      color: colors.foreground,
+      fontSize: 15,
+    },
     pinInput: {
       backgroundColor: colors.secondary,
       borderRadius: 12,
