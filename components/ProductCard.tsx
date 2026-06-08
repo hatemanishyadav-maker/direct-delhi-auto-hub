@@ -20,7 +20,7 @@ interface Props {
   horizontal?: boolean;
 }
 
-const placeholderImg = require("../assets/images/banner1.png");
+const placeholderImg = require("../assets/images/banner1.jpg");
 
 function getImageSource(product: Product) {
   if (product.imageUrl) return { uri: product.imageUrl };
