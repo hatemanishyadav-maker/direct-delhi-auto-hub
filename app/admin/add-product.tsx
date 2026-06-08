@@ -17,7 +17,7 @@ import categories from "@/data/categories";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useColors } from "@/hooks/useColors";
 
-const bannerImg = require("../../assets/images/banner1.png");
+const bannerImg = require("../../assets/images/banner1.jpg");
 
 export default function AddProductScreen() {
   const colors = useColors();
