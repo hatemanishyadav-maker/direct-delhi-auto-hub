@@ -1,13 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { Product } from "@/types";
 import { API_BASE } from "@/constants/apiUrl";
-import staticProducts, {
-  getFeaturedProducts,
-  getNewProducts,
-  getBestsellerProducts,
-  getProductsByCategory,
-  getProductById as getStaticById,
-} from "@/data/products";
 
 function apiToProduct(p: any): Product {
   return {
@@ -29,99 +23,106 @@ function apiToProduct(p: any): Product {
 }
 
 async function fetchProducts(params?: Record<string, string>): Promise<Product[]> {
-  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-  const res = await fetch(`${API_BASE}/products${qs}`);
+  const qs = params && Object.keys(params).length > 0
+    ? "?" + new URLSearchParams(params).toString()
+    : "";
+  const res = await fetch(`${API_BASE}/products${qs}`, {
+    headers: { "Cache-Control": "no-cache" },
+  });
   if (!res.ok) throw new Error("API error");
   const data = await res.json();
   return Array.isArray(data) ? data.map(apiToProduct) : [];
 }
 
 export function useAllProducts(search?: string, filter?: string) {
-  const [products, setProducts] = useState<Product[]>(staticProducts as unknown as Product[]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     const params: Record<string, string> = {};
     if (search?.trim()) params.q = search.trim();
     if (filter === "featured") params.featured = "true";
     else if (filter === "new") params.isNew = "true";
     else if (filter === "bestseller") params.isBestseller = "true";
 
-    const fallback = filter === "featured"
-      ? (getFeaturedProducts() as unknown as Product[])
-      : filter === "new"
-      ? (getNewProducts() as unknown as Product[])
-      : filter === "bestseller"
-      ? (getBestsellerProducts() as unknown as Product[])
-      : (staticProducts as unknown as Product[]);
-
     setLoading(true);
     fetchProducts(params)
-      .then((data) => {
-        setProducts(data.length > 0 ? data : fallback);
-      })
-      .catch(() => {
-        setProducts(fallback);
-      })
+      .then((data) => setProducts(data))
+      .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, [search, filter]);
 
-  return { products, loading };
+  useFocusEffect(useCallback(() => {
+    load();
+  }, [load]));
+
+  return { products, loading, refetch: load };
 }
 
 export function useFeaturedProducts() {
-  const [products, setProducts] = useState<Product[]>(getFeaturedProducts() as unknown as Product[]);
-  useEffect(() => {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useFocusEffect(useCallback(() => {
     fetchProducts({ featured: "true" })
-      .then((d) => { if (d.length > 0) setProducts(d); })
+      .then((d) => setProducts(d))
       .catch(() => {});
-  }, []);
+  }, []));
+
   return products;
 }
 
 export function useNewProducts() {
-  const [products, setProducts] = useState<Product[]>(getNewProducts() as unknown as Product[]);
-  useEffect(() => {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useFocusEffect(useCallback(() => {
     fetchProducts({ isNew: "true" })
-      .then((d) => { if (d.length > 0) setProducts(d); })
+      .then((d) => setProducts(d))
       .catch(() => {});
-  }, []);
+  }, []));
+
   return products;
 }
 
 export function useBestsellerProducts() {
-  const [products, setProducts] = useState<Product[]>(getBestsellerProducts() as unknown as Product[]);
-  useEffect(() => {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useFocusEffect(useCallback(() => {
     fetchProducts({ isBestseller: "true" })
-      .then((d) => { if (d.length > 0) setProducts(d); })
+      .then((d) => setProducts(d))
       .catch(() => {});
-  }, []);
+  }, []));
+
   return products;
 }
 
 export function useCategoryProducts(categoryId: string) {
-  const [products, setProducts] = useState<Product[]>(getProductsByCategory(categoryId) as unknown as Product[]);
-  useEffect(() => {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useFocusEffect(useCallback(() => {
     if (!categoryId) return;
     fetchProducts({ category: categoryId })
-      .then((d) => { if (d.length > 0) setProducts(d); })
+      .then((d) => setProducts(d))
       .catch(() => {});
-  }, [categoryId]);
+  }, [categoryId]));
+
   return products;
 }
 
 export function useProductById(id: string) {
-  const [product, setProduct] = useState<Product | null>(getStaticById(id) as unknown as Product | null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
+
+  useFocusEffect(useCallback(() => {
     if (!id) { setLoading(false); return; }
-    fetch(`${API_BASE}/products/${id}`)
+    setLoading(true);
+    fetch(`${API_BASE}/products/${id}`, { headers: { "Cache-Control": "no-cache" } })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data) setProduct(apiToProduct(data));
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [id]);
+  }, [id]));
+
   return { product, loading };
 }
