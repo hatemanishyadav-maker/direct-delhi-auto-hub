@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ProductCard from "@/components/ProductCard";
 import categories from "@/data/categories";
-import { getProductsByCategory } from "@/data/products";
 import { useColors } from "@/hooks/useColors";
+import { useCategoryProducts } from "@/hooks/useProducts";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 16 * 2 - 12) / 2;
@@ -25,7 +25,7 @@ export default function CategoryScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const category = categories.find((c) => c.id === id);
-  const products = getProductsByCategory(id ?? "");
+  const products = useCategoryProducts(id ?? "");
   const s = styles(colors);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
