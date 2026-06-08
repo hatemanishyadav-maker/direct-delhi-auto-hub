@@ -72,7 +72,7 @@ export default function HomeScreen() {
         <BannerCarousel banners={banners} />
 
         <View style={s.categoriesSection}>
-          <SectionHeader title="Categories" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
+          <SectionHeader title="Categories" onSeeAll={() => router.push("/all-categories" as any)} />
           <FlatList
             horizontal
             data={categories}
@@ -93,7 +93,10 @@ export default function HomeScreen() {
           />
         </View>
 
-        <SectionHeader title="Featured Products" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
+        <SectionHeader
+          title="Featured Products"
+          onSeeAll={() => router.push({ pathname: "/(tabs)/shop", params: { filter: "featured" } } as any)}
+        />
         <FlatList
           horizontal
           data={featured}
@@ -105,7 +108,10 @@ export default function HomeScreen() {
           )}
         />
 
-        <SectionHeader title="New Arrivals" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
+        <SectionHeader
+          title="New Arrivals"
+          onSeeAll={() => router.push({ pathname: "/(tabs)/shop", params: { filter: "new" } } as any)}
+        />
         <FlatList
           horizontal
           data={newArrivals}
@@ -117,7 +123,10 @@ export default function HomeScreen() {
           )}
         />
 
-        <SectionHeader title="Best Sellers" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
+        <SectionHeader
+          title="Best Sellers"
+          onSeeAll={() => router.push({ pathname: "/(tabs)/shop", params: { filter: "bestseller" } } as any)}
+        />
         <FlatList
           horizontal
           data={bestsellers}
