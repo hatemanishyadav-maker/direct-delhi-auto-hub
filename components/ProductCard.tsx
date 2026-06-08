@@ -20,6 +20,14 @@ interface Props {
   horizontal?: boolean;
 }
 
+const placeholderImg = require("../assets/images/banner1.png");
+
+function getImageSource(product: Product) {
+  if (product.imageUrl) return { uri: product.imageUrl };
+  if (product.image) return product.image;
+  return placeholderImg;
+}
+
 export default function ProductCard({ product, width, horizontal }: Props) {
   const colors = useColors();
   const { addToCart } = useCart();
@@ -36,7 +44,7 @@ export default function ProductCard({ product, width, horizontal }: Props) {
         onPress={() => router.push(`/product/${product.id}` as any)}
       >
         <View style={s.hImageBox}>
-          <Image source={product.image} style={s.hImage} resizeMode="cover" />
+          <Image source={getImageSource(product)} style={s.hImage} resizeMode="cover" />
           {product.isNew && (
             <View style={[s.badge, { backgroundColor: "#22c55e" }]}>
               <Text style={s.badgeText}>NEW</Text>
@@ -80,7 +88,7 @@ export default function ProductCard({ product, width, horizontal }: Props) {
       onPress={() => router.push(`/product/${product.id}` as any)}
     >
       <View style={s.imageBox}>
-        <Image source={product.image} style={s.image} resizeMode="cover" />
+        <Image source={getImageSource(product)} style={s.image} resizeMode="cover" />
         {product.isNew && (
           <View style={[s.badge, { backgroundColor: "#22c55e" }]}>
             <Text style={s.badgeText}>NEW</Text>
