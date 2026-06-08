@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Platform,
@@ -16,8 +17,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ProductCard from "@/components/ProductCard";
 import categories from "@/data/categories";
-import products from "@/data/products";
 import { useColors } from "@/hooks/useColors";
+import { useAllProducts } from "@/hooks/useProducts";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 16 * 2 - 12) / 2;
@@ -30,21 +31,12 @@ export default function ShopScreen() {
   const s = styles(colors);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+  const { products, loading } = useAllProducts(searchQuery);
+
   const filtered = useMemo(() => {
-    let list = products;
-    if (activeCategory !== "all") {
-      list = list.filter((p) => p.categoryId === activeCategory);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [activeCategory, searchQuery]);
+    if (activeCategory === "all") return products;
+    return products.filter((p) => p.categoryId === activeCategory);
+  }, [products, activeCategory]);
 
   const allCategories = [{ id: "all", name: "All", icon: "grid", color: colors.red }, ...categories];
 
@@ -73,56 +65,47 @@ export default function ShopScreen() {
         )}
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={s.tabs}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabs}>
         {allCategories.map((cat) => (
           <Pressable
             key={cat.id}
-            style={[
-              s.tab,
-              {
-                backgroundColor:
-                  activeCategory === cat.id ? colors.red : colors.card,
-                borderColor:
-                  activeCategory === cat.id ? colors.red : colors.border,
-              },
-            ]}
+            style={[s.tab, {
+              backgroundColor: activeCategory === cat.id ? colors.red : colors.card,
+              borderColor: activeCategory === cat.id ? colors.red : colors.border,
+            }]}
             onPress={() => setActiveCategory(cat.id)}
           >
-            <Text
-              style={[
-                s.tabText,
-                { color: activeCategory === cat.id ? "#fff" : colors.mutedForeground },
-              ]}
-            >
+            <Text style={[s.tabText, { color: activeCategory === cat.id ? "#fff" : colors.mutedForeground }]}>
               {cat.name}
             </Text>
           </Pressable>
         ))}
       </ScrollView>
 
-      <Text style={s.count}>{filtered.length} products</Text>
-
-      <FlatList
-        data={filtered}
-        numColumns={2}
-        columnWrapperStyle={s.row}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={s.list}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <ProductCard product={item} width={CARD_WIDTH} />
-        )}
-        ListEmptyComponent={
-          <View style={s.empty}>
-            <Feather name="package" size={48} color={colors.mutedForeground} />
-            <Text style={s.emptyText}>No products found</Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={s.loader}>
+          <ActivityIndicator color={colors.red} size="large" />
+        </View>
+      ) : (
+        <>
+          <Text style={s.count}>{filtered.length} products</Text>
+          <FlatList
+            data={filtered}
+            numColumns={2}
+            columnWrapperStyle={s.row}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={s.list}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => <ProductCard product={item} width={CARD_WIDTH} />}
+            ListEmptyComponent={
+              <View style={s.empty}>
+                <Feather name="package" size={48} color={colors.mutedForeground} />
+                <Text style={s.emptyText}>No products found</Text>
+              </View>
+            }
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -154,31 +137,13 @@ const styles = (colors: ReturnType<typeof useColors>) =>
       gap: 8,
     },
     searchInput: { flex: 1, color: colors.foreground, fontSize: 14 },
-    tabs: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      gap: 8,
-    },
-    tab: {
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderRadius: 20,
-      borderWidth: 1,
-    },
+    tabs: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
+    tab: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
     tabText: { fontSize: 13, fontWeight: "600" },
-    count: {
-      color: colors.mutedForeground,
-      fontSize: 13,
-      paddingHorizontal: 16,
-      marginBottom: 8,
-    },
+    loader: { flex: 1, alignItems: "center", justifyContent: "center" },
+    count: { color: colors.mutedForeground, fontSize: 13, paddingHorizontal: 16, marginBottom: 8 },
     list: { paddingHorizontal: 16, paddingBottom: Platform.OS === "web" ? 100 : 90 },
     row: { gap: 12, marginBottom: 12 },
-    empty: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 80,
-      gap: 12,
-    },
+    empty: { alignItems: "center", justifyContent: "center", paddingVertical: 80, gap: 12 },
     emptyText: { color: colors.mutedForeground, fontSize: 16 },
   });
