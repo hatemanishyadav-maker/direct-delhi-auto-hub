@@ -4,10 +4,11 @@ export interface Product {
   categoryId: string;
   price: number;
   mrp: number;
-  image: any;
+  image?: any;
   images?: any[];
+  imageUrl?: string | null;
   description: string;
-  specs: { label: string; value: string }[];
+  specs?: { label: string; value: string }[];
   inStock: boolean;
   rating: number;
   reviewCount: number;
