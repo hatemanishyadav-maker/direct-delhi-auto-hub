@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { AppState, AppStateStatus } from "react-native";
 import { Product } from "@/types";
 import { API_BASE } from "@/constants/apiUrl";
 import staticProducts, {
@@ -12,10 +12,14 @@ import staticProducts, {
 
 // Module-level cache shared across all hook instances
 const cache: Record<string, { data: Product[]; at: number }> = {};
-const CACHE_TTL = 30_000; // 30 seconds
+const CACHE_TTL = 30_000; // 30 seconds — refresh when app comes to foreground
 
 function isFresh(key: string) {
   return cache[key] && Date.now() - cache[key].at < CACHE_TTL;
+}
+
+export function invalidateProductCache() {
+  Object.keys(cache).forEach((k) => delete cache[k]);
 }
 
 function apiToProduct(p: any): Product {
@@ -54,13 +58,12 @@ async function fetchProducts(params?: Record<string, string>): Promise<Product[]
   return products;
 }
 
-// Invalidate cache on any mutation so next focus gets fresh data
-export function invalidateProductCache() {
-  Object.keys(cache).forEach((k) => delete cache[k]);
-}
+// When app comes to foreground, invalidate cache so next fetch gets fresh data
+AppState.addEventListener("change", (state: AppStateStatus) => {
+  if (state === "active") invalidateProductCache();
+});
 
 export function useAllProducts(search?: string, filter?: string) {
-  // Start with static data so UI renders instantly
   const fallback = filter === "featured"
     ? (getFeaturedProducts() as unknown as Product[])
     : filter === "new"
@@ -69,12 +72,14 @@ export function useAllProducts(search?: string, filter?: string) {
     ? (getBestsellerProducts() as unknown as Product[])
     : (staticProducts as unknown as Product[]);
 
-  const [products, setProducts] = useState<Product[]>(
-    search ? [] : fallback
-  );
+  const [products, setProducts] = useState<Product[]>(search ? [] : fallback);
   const [loading, setLoading] = useState(false);
   const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   const load = useCallback((force = false) => {
     const params: Record<string, string> = {};
@@ -82,7 +87,6 @@ export function useAllProducts(search?: string, filter?: string) {
     if (filter === "featured") params.featured = "true";
     else if (filter === "new") params.isNew = "true";
     else if (filter === "bestseller") params.isBestseller = "true";
-
     const key = new URLSearchParams(params).toString() || "all";
     if (!force && isFresh(key)) {
       if (mounted.current) setProducts(cache[key].data);
@@ -95,11 +99,7 @@ export function useAllProducts(search?: string, filter?: string) {
       .finally(() => { if (mounted.current) setLoading(false); });
   }, [search, filter]);
 
-  // Fetch on mount
   useEffect(() => { load(); }, [load]);
-
-  // Refresh when screen is focused (but only if cache is stale)
-  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return { products, loading, refetch: () => load(true) };
 }
@@ -110,16 +110,11 @@ export function useFeaturedProducts() {
   );
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-
-  const load = useCallback(() => {
+  useEffect(() => {
     fetchProducts({ featured: "true" })
       .then((d) => { if (mounted.current && d.length > 0) setProducts(d); })
       .catch(() => {});
   }, []);
-
-  useEffect(() => { load(); }, []);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
-
   return products;
 }
 
@@ -129,16 +124,11 @@ export function useNewProducts() {
   );
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-
-  const load = useCallback(() => {
+  useEffect(() => {
     fetchProducts({ isNew: "true" })
       .then((d) => { if (mounted.current && d.length > 0) setProducts(d); })
       .catch(() => {});
   }, []);
-
-  useEffect(() => { load(); }, []);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
-
   return products;
 }
 
@@ -148,16 +138,11 @@ export function useBestsellerProducts() {
   );
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-
-  const load = useCallback(() => {
+  useEffect(() => {
     fetchProducts({ isBestseller: "true" })
       .then((d) => { if (mounted.current && d.length > 0) setProducts(d); })
       .catch(() => {});
   }, []);
-
-  useEffect(() => { load(); }, []);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
-
   return products;
 }
 
@@ -167,17 +152,12 @@ export function useCategoryProducts(categoryId: string) {
   );
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-
-  const load = useCallback(() => {
+  useEffect(() => {
     if (!categoryId) return;
     fetchProducts({ category: categoryId })
       .then((d) => { if (mounted.current && d.length > 0) setProducts(d); })
       .catch(() => {});
   }, [categoryId]);
-
-  useEffect(() => { load(); }, [categoryId]);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
-
   return products;
 }
 
@@ -188,8 +168,7 @@ export function useProductById(id: string) {
   const [loading, setLoading] = useState(true);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-
-  useFocusEffect(useCallback(() => {
+  useEffect(() => {
     if (!id) { setLoading(false); return; }
     setLoading(true);
     fetch(`${API_BASE}/products/${id}`, { headers: { "Cache-Control": "no-cache" } })
@@ -201,7 +180,6 @@ export function useProductById(id: string) {
         }
       })
       .catch(() => { if (mounted.current) setLoading(false); });
-  }, [id]));
-
+  }, [id]);
   return { product, loading };
 }
