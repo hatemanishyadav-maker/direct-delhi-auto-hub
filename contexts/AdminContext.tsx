@@ -55,10 +55,10 @@ export interface StockEntry {
   note: string;
 }
 
-const lightsImg = require("../assets/images/cat_lights.png");
-const stereoImg = require("../assets/images/cat_stereo.png");
-const seatsImg = require("../assets/images/cat_seats.png");
-const bannerImg = require("../assets/images/banner1.png");
+const lightsImg = require("../assets/images/cat_lights.jpg");
+const stereoImg = require("../assets/images/cat_stereo.jpg");
+const seatsImg = require("../assets/images/cat_seats.jpg");
+const bannerImg = require("../assets/images/banner1.jpg");
 
 const SEED_PRODUCTS: AdminProduct[] = [
   {
