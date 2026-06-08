@@ -24,7 +24,7 @@ import { useFeaturedProducts, useNewProducts, useBestsellerProducts } from "@/ho
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = Math.min(150, (SCREEN_WIDTH - 16 * 2 - 12) / 2.4);
 
-const bannerImg = require("../../assets/images/banner1.png");
+const bannerImg = require("../../assets/images/banner1.jpg");
 const banners = [
   {
     id: "b1",
