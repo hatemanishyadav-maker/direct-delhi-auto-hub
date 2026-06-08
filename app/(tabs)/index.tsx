@@ -18,12 +18,8 @@ import BannerCarousel from "@/components/BannerCarousel";
 import ProductCard from "@/components/ProductCard";
 import SectionHeader from "@/components/SectionHeader";
 import categories from "@/data/categories";
-import {
-  getBestsellerProducts,
-  getFeaturedProducts,
-  getNewProducts,
-} from "@/data/products";
 import { useColors } from "@/hooks/useColors";
+import { useFeaturedProducts, useNewProducts, useBestsellerProducts } from "@/hooks/useProducts";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = Math.min(150, (SCREEN_WIDTH - 16 * 2 - 12) / 2.4);
@@ -50,15 +46,15 @@ const banners = [
   },
 ];
 
-const featured = getFeaturedProducts();
-const newArrivals = getNewProducts();
-const bestsellers = getBestsellerProducts();
-
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const s = styles(colors);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const featured = useFeaturedProducts();
+  const newArrivals = useNewProducts();
+  const bestsellers = useBestsellerProducts();
 
   return (
     <View style={[s.container, { paddingTop: topPad }]}>
