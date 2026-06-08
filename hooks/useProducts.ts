@@ -36,22 +36,35 @@ async function fetchProducts(params?: Record<string, string>): Promise<Product[]
   return Array.isArray(data) ? data.map(apiToProduct) : [];
 }
 
-export function useAllProducts(search?: string) {
+export function useAllProducts(search?: string, filter?: string) {
   const [products, setProducts] = useState<Product[]>(staticProducts as unknown as Product[]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const params: Record<string, string> = {};
     if (search?.trim()) params.q = search.trim();
+    if (filter === "featured") params.featured = "true";
+    else if (filter === "new") params.isNew = "true";
+    else if (filter === "bestseller") params.isBestseller = "true";
+
+    const fallback = filter === "featured"
+      ? (getFeaturedProducts() as unknown as Product[])
+      : filter === "new"
+      ? (getNewProducts() as unknown as Product[])
+      : filter === "bestseller"
+      ? (getBestsellerProducts() as unknown as Product[])
+      : (staticProducts as unknown as Product[]);
+
+    setLoading(true);
     fetchProducts(params)
       .then((data) => {
-        setProducts(data.length > 0 ? data : (staticProducts as unknown as Product[]));
+        setProducts(data.length > 0 ? data : fallback);
       })
       .catch(() => {
-        setProducts(staticProducts as unknown as Product[]);
+        setProducts(fallback);
       })
       .finally(() => setLoading(false));
-  }, [search]);
+  }, [search, filter]);
 
   return { products, loading };
 }
