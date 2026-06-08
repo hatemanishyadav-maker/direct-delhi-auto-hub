@@ -36,12 +36,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "e5864cf5-dd91-4fba-ac5f-a11c3093a11f"
+        "projectId": "4ac4a431-2443-466b-8710-8ee31de85003"
       }
     },
-    "owner": "pooja6622",
-    "experiments": {
-      "typedRoutes": true
-    }
+    "owner": "ayansh810"
   }
 }
