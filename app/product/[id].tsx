@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
@@ -18,8 +19,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { getProductById } from "@/data/products";
 import { useColors } from "@/hooks/useColors";
+import { useProductById } from "@/hooks/useProducts";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const WHATSAPP = "919753662278";
@@ -28,13 +29,21 @@ export default function ProductDetail() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const product = getProductById(id ?? "");
+  const { product, loading } = useProductById(id ?? "");
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
   const s = styles(colors);
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
+
+  if (loading) {
+    return (
+      <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator color={colors.red} size="large" />
+      </View>
+    );
+  }
 
   if (!product) {
     return (
@@ -46,7 +55,11 @@ export default function ProductDetail() {
 
   const wished = isInWishlist(product.id);
   const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
-  const images = product.images?.length ? product.images : [product.image];
+  const images = product.images?.length
+    ? product.images
+    : product.imageUrl
+    ? [{ uri: product.imageUrl }]
+    : [product.image];
 
   const handleAddToCart = () => {
     if (!product.inStock) return;
@@ -170,7 +183,7 @@ export default function ProductDetail() {
 
           <View style={s.divider} />
           <Text style={s.sectionTitle}>Specifications</Text>
-          {product.specs.map((spec) => (
+          {(product.specs ?? []).map((spec) => (
             <View key={spec.label} style={s.specRow}>
               <Text style={s.specLabel}>{spec.label}</Text>
               <Text style={s.specValue}>{spec.value}</Text>
