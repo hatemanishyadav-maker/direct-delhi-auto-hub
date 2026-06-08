@@ -26,7 +26,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = (SCREEN_WIDTH - 16 * 2 - 12) / 2;
+const CARD_WIDTH = Math.min(150, (SCREEN_WIDTH - 16 * 2 - 12) / 2.4);
 
 const bannerImg = require("../../assets/images/banner1.png");
 const banners = [
@@ -76,7 +76,7 @@ export default function HomeScreen() {
         <BannerCarousel banners={banners} />
 
         <View style={s.categoriesSection}>
-          <SectionHeader title="Categories" />
+          <SectionHeader title="Categories" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
           <FlatList
             horizontal
             data={categories}
@@ -97,7 +97,7 @@ export default function HomeScreen() {
           />
         </View>
 
-        <SectionHeader title="Featured Products" />
+        <SectionHeader title="Featured Products" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
         <FlatList
           horizontal
           data={featured}
@@ -109,7 +109,7 @@ export default function HomeScreen() {
           )}
         />
 
-        <SectionHeader title="New Arrivals" />
+        <SectionHeader title="New Arrivals" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
         <FlatList
           horizontal
           data={newArrivals}
@@ -121,7 +121,7 @@ export default function HomeScreen() {
           )}
         />
 
-        <SectionHeader title="Best Sellers" />
+        <SectionHeader title="Best Sellers" onSeeAll={() => router.push("/(tabs)/shop" as any)} />
         <FlatList
           horizontal
           data={bestsellers}
