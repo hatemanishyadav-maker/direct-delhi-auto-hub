@@ -71,6 +71,20 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <BannerCarousel banners={banners} />
 
+        <Pressable
+          style={s.orderBtn}
+          onPress={() => router.push("/(tabs)/chat" as any)}
+        >
+          <View style={s.orderBtnInner}>
+            <Feather name="message-circle" size={22} color="#fff" />
+            <View>
+              <Text style={s.orderBtnTitle}>Place Your Order</Text>
+              <Text style={s.orderBtnSub}>Chat with us — quick reply guaranteed</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color="#fff" style={{ marginLeft: "auto" }} />
+          </View>
+        </Pressable>
+
         <View style={s.categoriesSection}>
           <SectionHeader title="Categories" onSeeAll={() => router.push("/all-categories" as any)} />
           <FlatList
@@ -239,6 +253,32 @@ const styles = (colors: ReturnType<typeof useColors>) =>
       gap: 7,
       paddingVertical: 11,
       borderRadius: 8,
+    },
+    orderBtn: {
+      marginHorizontal: 16,
+      marginTop: 14,
+      marginBottom: 6,
+      borderRadius: 12,
+      backgroundColor: colors.red,
+      overflow: "hidden",
+    },
+    orderBtnInner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 18,
+      paddingVertical: 16,
+    },
+    orderBtnTitle: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "800",
+      letterSpacing: 0.2,
+    },
+    orderBtnSub: {
+      color: "rgba(255,255,255,0.8)",
+      fontSize: 12,
+      marginTop: 1,
     },
     callBtn: { backgroundColor: colors.red },
     waBtn: { backgroundColor: "#25D366" },
