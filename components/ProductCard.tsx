@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Image,
   Pressable,
@@ -28,14 +28,15 @@ function getImageSource(product: Product) {
   return placeholderImg;
 }
 
-export default function ProductCard({ product, width, horizontal }: Props) {
+function ProductCard({ product, width, horizontal }: Props) {
   const colors = useColors();
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const wished = isInWishlist(product.id);
   const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+  const imgSource = useMemo(() => getImageSource(product), [product]);
 
-  const s = styles(colors);
+  const s = useMemo(() => styles(colors), [colors]);
 
   if (horizontal) {
     return (
@@ -44,7 +45,7 @@ export default function ProductCard({ product, width, horizontal }: Props) {
         onPress={() => router.push(`/product/${product.id}` as any)}
       >
         <View style={s.hImageBox}>
-          <Image source={getImageSource(product)} style={s.hImage} resizeMode="cover" />
+          <Image source={imgSource} style={s.hImage} resizeMode="cover" />
           {product.isNew && (
             <View style={[s.badge, { backgroundColor: "#22c55e" }]}>
               <Text style={s.badgeText}>NEW</Text>
@@ -67,10 +68,7 @@ export default function ProductCard({ product, width, horizontal }: Props) {
             <Text style={s.mrp}>₹{product.mrp.toLocaleString()}</Text>
             <Text style={s.discount}>{discount}% off</Text>
           </View>
-          <Pressable
-            style={s.addBtn}
-            onPress={() => addToCart(product)}
-          >
+          <Pressable style={s.addBtn} onPress={() => addToCart(product)}>
             <Feather name="shopping-cart" size={14} color="#fff" />
             <Text style={s.addBtnText}>Add</Text>
           </Pressable>
@@ -88,7 +86,7 @@ export default function ProductCard({ product, width, horizontal }: Props) {
       onPress={() => router.push(`/product/${product.id}` as any)}
     >
       <View style={s.imageBox}>
-        <Image source={getImageSource(product)} style={s.image} resizeMode="cover" />
+        <Image source={imgSource} style={s.image} resizeMode="cover" />
         {product.isNew && (
           <View style={[s.badge, { backgroundColor: "#22c55e" }]}>
             <Text style={s.badgeText}>NEW</Text>
@@ -122,6 +120,8 @@ export default function ProductCard({ product, width, horizontal }: Props) {
     </Pressable>
   );
 }
+
+export default React.memo(ProductCard);
 
 const styles = (colors: ReturnType<typeof useColors>) =>
   StyleSheet.create({
@@ -174,7 +174,6 @@ const styles = (colors: ReturnType<typeof useColors>) =>
       marginTop: 4,
     },
     addBtnText: { color: "#fff", fontSize: 12, fontWeight: "700" },
-    // Horizontal layout
     hCard: {
       backgroundColor: colors.card,
       borderRadius: 12,
