@@ -8,6 +8,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -48,15 +49,18 @@ async function sendMessage(payload: {
   customerPhone: string;
   message?: string;
   imageBase64?: string;
-}): Promise<boolean> {
+}): Promise<{ ok: boolean; error?: string }> {
   try {
     const r = await fetch(`${API_BASE}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return r.ok;
-  } catch { return false; }
+    if (r.ok) return { ok: true };
+    return { ok: false, error: `Server error ${r.status}` };
+  } catch (e: any) {
+    return { ok: false, error: e?.message || String(e) };
+  }
 }
 
 export default function ChatScreen() {
@@ -157,18 +161,34 @@ export default function ChatScreen() {
     if (!text.trim() && !selectedImage) return;
     setSending(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const ok = await sendMessage({
+    const msgText = text.trim();
+    const result = await sendMessage({
       customerName: user.name,
       customerPhone: user.phone,
-      message: text.trim() || undefined,
+      message: msgText || undefined,
       imageBase64: selectedImage || undefined,
     });
-    if (ok) {
+    if (result.ok) {
       setText("");
       setSelectedImage(null);
       await loadMessages();
     } else {
-      Alert.alert("Error", "Message send failed. Check your internet.");
+      Alert.alert(
+        "Send Failed",
+        `Could not reach server.\n\nSend via WhatsApp instead?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "WhatsApp",
+            onPress: () => {
+              const waMsg = encodeURIComponent(
+                `Hi, I'm ${user.name} (+91 ${user.phone}).\n\n${msgText || "[Image order]"}`
+              );
+              Linking.openURL(`https://wa.me/919753662278?text=${waMsg}`);
+            },
+          },
+        ]
+      );
     }
     setSending(false);
   };
