@@ -36,6 +36,7 @@ export default function AdminDashboard() {
   const menuItems = [
     { icon: "package", label: "Products", subtitle: `${products.length} products`, onPress: () => router.push("/admin/products" as any), color: "#1E90FF" },
     { icon: "shopping-bag", label: "Orders", subtitle: `${pendingOrders} pending`, onPress: () => router.push("/admin/orders" as any), color: "#F59E0B" },
+    { icon: "message-circle", label: "Messages", subtitle: "Customer chat replies", onPress: () => router.push("/admin/messages" as any), color: colors.red },
     { icon: "layers", label: "Inventory", subtitle: `${lowStockProducts.length} low stock`, onPress: () => router.push("/admin/inventory" as any), color: "#8B5CF6" },
     { icon: "bar-chart-2", label: "Analytics", subtitle: "Sales reports", onPress: () => router.push("/admin/analytics" as any), color: "#22c55e" },
     { icon: "users", label: "Customers", subtitle: `${customers.length} total`, onPress: () => router.push("/admin/customers" as any), color: "#EC4899" },
