@@ -22,7 +22,7 @@ import { useColors } from "@/hooks/useColors";
 
 const WHATSAPP_NUMBER = "919753662278";
 const PHONE_NUMBER = "9753662278";
-const ADMIN_PIN = "1234";
+const ADMIN_PIN = "Ayansh23";
 const USER_KEY = "@ddah_user";
 
 interface UserInfo {
@@ -304,7 +304,7 @@ export default function ProfileScreen() {
               autoFocus
             />
             {pinError ? <Text style={s.pinError}>{pinError}</Text> : null}
-            <Text style={s.pinHint}>Default PIN: 1234</Text>
+            <Text style={s.pinHint}>Contact admin for PIN</Text>
             <View style={s.modalBtns}>
               <Pressable style={s.cancelBtn} onPress={() => { setPinModal(false); setPinInput(""); setPinError(""); }}>
                 <Text style={s.cancelBtnText}>Cancel</Text>
