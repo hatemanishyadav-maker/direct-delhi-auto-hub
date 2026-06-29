@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -36,7 +36,7 @@ export default function ShopScreen() {
   const [activeCategory, setActiveCategory] = useState(params.category ?? "all");
   const [activeFilter, setActiveFilter] = useState(params.filter ?? "");
   const [searchQuery, setSearchQuery] = useState("");
-  const s = styles(colors);
+  const s = useMemo(() => styles(colors), [colors]);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   useEffect(() => {
@@ -50,6 +50,12 @@ export default function ShopScreen() {
     if (activeCategory === "all") return products;
     return products.filter((p) => p.categoryId === activeCategory);
   }, [products, activeCategory]);
+
+  const renderProduct = useCallback(({ item }: { item: (typeof products)[0] }) => (
+    <ProductCard product={item} width={CARD_WIDTH} />
+  ), []);
+
+  const keyExtractProduct = useCallback((item: (typeof products)[0]) => item.id, []);
 
   const allCategories = [
     { id: "all", name: "All", icon: "grid", color: colors.red },
@@ -132,10 +138,14 @@ export default function ShopScreen() {
             data={filtered}
             numColumns={2}
             columnWrapperStyle={s.row}
-            keyExtractor={(item) => item.id}
+            keyExtractor={keyExtractProduct}
             contentContainerStyle={s.list}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => <ProductCard product={item} width={CARD_WIDTH} />}
+            removeClippedSubviews
+            maxToRenderPerBatch={6}
+            windowSize={7}
+            initialNumToRender={6}
+            renderItem={renderProduct}
             ListEmptyComponent={
               <View style={s.empty}>
                 <Feather name="package" size={48} color={colors.mutedForeground} />
