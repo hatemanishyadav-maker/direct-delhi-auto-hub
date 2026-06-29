@@ -73,6 +73,13 @@ export default function ChatScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+  // Sign-in form state
+  const [loginName, setLoginName] = useState("");
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginCity, setLoginCity] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
   // Load user from storage
   useEffect(() => {
     AsyncStorage.getItem(USER_KEY).then((val) => {
@@ -101,6 +108,31 @@ export default function ChatScreen() {
       setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
     }
   }, [messages.length]);
+
+  const handleLogin = async () => {
+    if (!loginName.trim()) {
+      setLoginError("Please enter your name.");
+      return;
+    }
+    if (!loginPhone.trim() || loginPhone.trim().length < 10) {
+      setLoginError("Please enter a valid 10-digit phone number.");
+      return;
+    }
+    setLoginLoading(true);
+    const info: UserInfo = {
+      name: loginName.trim(),
+      phone: loginPhone.trim(),
+      city: loginCity.trim() || "Delhi",
+    };
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(info));
+    setUser(info);
+    setLoginName("");
+    setLoginPhone("");
+    setLoginCity("");
+    setLoginError("");
+    setLoginLoading(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
 
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -141,22 +173,93 @@ export default function ChatScreen() {
     setSending(false);
   };
 
+  // ─── Not logged in → show inline sign-in form ───────────────────────────
   if (!user) {
     return (
-      <View style={[s.container, { paddingTop: topPad }, s.center]}>
-        <View style={s.loginBox}>
-          <View style={[s.iconCircle, { backgroundColor: colors.red + "22" }]}>
-            <Feather name="message-circle" size={36} color={colors.red} />
+      <KeyboardAvoidingView
+        style={[s.container, { paddingTop: topPad }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={s.header}>
+          <View style={s.headerLeft}>
+            <View style={[s.avatarSmall, { backgroundColor: colors.red + "22" }]}>
+              <Feather name="message-circle" size={18} color={colors.red} />
+            </View>
+            <View>
+              <Text style={s.headerTitle}>Chat with Us</Text>
+              <Text style={s.headerSub}>Direct Delhi Auto Hub</Text>
+            </View>
           </View>
-          <Text style={s.loginTitle}>Chat with Us</Text>
-          <Text style={s.loginSub}>
-            Go to <Text style={{ color: colors.red, fontWeight: "700" }}>Account</Text> tab → Sign In to start chatting with Direct Delhi Auto Hub.
-          </Text>
         </View>
-      </View>
+
+        <View style={s.loginContainer}>
+          <View style={[s.iconCircle, { backgroundColor: colors.red + "22" }]}>
+            <Feather name="user" size={36} color={colors.red} />
+          </View>
+          <Text style={s.loginTitle}>Enter Your Details</Text>
+          <Text style={s.loginSub}>to start chatting with us</Text>
+
+          <View style={s.formBox}>
+            <View style={s.inputGroup}>
+              <Text style={s.inputLabel}>Full Name *</Text>
+              <TextInput
+                style={[s.input, loginError && loginName.trim() === "" ? { borderColor: "#ef4444" } : {}]}
+                placeholder="e.g. Rahul Sharma"
+                placeholderTextColor={colors.mutedForeground}
+                value={loginName}
+                onChangeText={(t) => { setLoginName(t); setLoginError(""); }}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={s.inputGroup}>
+              <Text style={s.inputLabel}>Mobile Number *</Text>
+              <TextInput
+                style={[s.input, loginError && loginPhone.trim().length < 10 ? { borderColor: "#ef4444" } : {}]}
+                placeholder="10-digit mobile number"
+                placeholderTextColor={colors.mutedForeground}
+                value={loginPhone}
+                onChangeText={(t) => { setLoginPhone(t.replace(/\D/g, "")); setLoginError(""); }}
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
+            </View>
+
+            <View style={s.inputGroup}>
+              <Text style={s.inputLabel}>City</Text>
+              <TextInput
+                style={s.input}
+                placeholder="e.g. Delhi"
+                placeholderTextColor={colors.mutedForeground}
+                value={loginCity}
+                onChangeText={setLoginCity}
+                autoCapitalize="words"
+              />
+            </View>
+
+            {loginError ? <Text style={s.errorText}>{loginError}</Text> : null}
+
+            <Pressable
+              style={[s.loginBtn, loginLoading && { opacity: 0.6 }]}
+              onPress={handleLogin}
+              disabled={loginLoading}
+            >
+              {loginLoading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Feather name="message-circle" size={18} color="#fff" />
+                  <Text style={s.loginBtnText}>Start Chatting</Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     );
   }
 
+  // ─── Logged in → show chat ───────────────────────────────────────────────
   return (
     <KeyboardAvoidingView
       style={[s.container, { paddingTop: topPad }]}
@@ -171,7 +274,7 @@ export default function ChatScreen() {
           </View>
           <View>
             <Text style={s.headerTitle}>Direct Delhi Auto Hub</Text>
-            <Text style={s.headerSub}>Car Accessories Support</Text>
+            <Text style={s.headerSub}>Hi {user.name}!</Text>
           </View>
         </View>
         <Pressable onPress={loadMessages} style={{ padding: 6 }}>
@@ -245,7 +348,7 @@ export default function ChatScreen() {
           <Feather name="image" size={22} color={colors.mutedForeground} />
         </Pressable>
         <TextInput
-          style={s.input}
+          style={s.chatInput}
           value={text}
           onChangeText={setText}
           placeholder="Type a message..."
@@ -287,10 +390,50 @@ const styles = (colors: ReturnType<typeof useColors>) =>
     avatarSmall: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
     headerTitle: { color: colors.foreground, fontSize: 15, fontWeight: "700" },
     headerSub: { color: colors.mutedForeground, fontSize: 12 },
-    loginBox: { alignItems: "center", gap: 14, paddingHorizontal: 32 },
+
+    // Sign-in form
+    loginContainer: {
+      flex: 1,
+      alignItems: "center",
+      paddingHorizontal: 24,
+      paddingTop: 32,
+    },
     iconCircle: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
-    loginTitle: { color: colors.foreground, fontSize: 22, fontWeight: "800" },
-    loginSub: { color: colors.mutedForeground, fontSize: 15, textAlign: "center", lineHeight: 22 },
+    loginTitle: { color: colors.foreground, fontSize: 22, fontWeight: "800", marginTop: 16 },
+    loginSub: { color: colors.mutedForeground, fontSize: 15, marginTop: 4, marginBottom: 24 },
+    formBox: { width: "100%", gap: 14 },
+    inputGroup: { gap: 6 },
+    inputLabel: {
+      color: colors.mutedForeground,
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    input: {
+      backgroundColor: colors.secondary,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      color: colors.foreground,
+      fontSize: 15,
+    },
+    errorText: { color: "#ef4444", fontSize: 13, textAlign: "center" },
+    loginBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: colors.red,
+      borderRadius: 14,
+      paddingVertical: 16,
+      marginTop: 4,
+    },
+    loginBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+
+    // Chat UI
     emptyBox: { alignItems: "center", gap: 8, paddingTop: 80 },
     emptyText: { color: colors.foreground, fontSize: 16, fontWeight: "700" },
     emptySub: { color: colors.mutedForeground, fontSize: 14, textAlign: "center" },
@@ -324,7 +467,7 @@ const styles = (colors: ReturnType<typeof useColors>) =>
       gap: 8,
     },
     photoBtn: { padding: 8, marginBottom: 2 },
-    input: {
+    chatInput: {
       flex: 1,
       backgroundColor: colors.secondary,
       borderRadius: 20,
