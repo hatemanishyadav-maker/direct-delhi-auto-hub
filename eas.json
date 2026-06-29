@@ -10,7 +10,7 @@
         "EXPO_PUBLIC_DOMAIN": "67dff9f5-b28a-46a1-aa35-75fb7d20b29d-00-24zrpi3ramao7.sisko.replit.dev"
       },
       "android": {
-        "gradleCommand": ":app:assembleRelease",
+        "gradleCommand": ":app:assembleDebug",
         "cache": {
           "disabled": true
         }
