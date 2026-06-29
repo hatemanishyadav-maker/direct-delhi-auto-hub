@@ -11,6 +11,7 @@ export default function AdminLayout() {
       <Stack.Screen name="inventory" />
       <Stack.Screen name="analytics" />
       <Stack.Screen name="customers" />
+      <Stack.Screen name="messages" />
       <Stack.Screen name="invoice/[orderId]" />
     </Stack>
   );
